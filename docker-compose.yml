@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  itplanet:
+    image: ${DOCKER_REGISTRY-}itplanet
+    build:
+      context: .
+      dockerfile: ITPlanet/Dockerfile
