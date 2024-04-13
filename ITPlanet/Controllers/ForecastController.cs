@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ITPlanet.Data.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ITPlanet.Controllers
@@ -7,7 +8,12 @@ namespace ITPlanet.Controllers
     [ApiController]
     public class ForecastController : ControllerBase
     {
-        public List<Models.WeatherForecastModel> Forecasts { get; set; } = new();
+        ITPlanet.Data.Data.ApplicationDbContext _dbcontext;
+
+        public ForecastController(ApplicationDbContext dbcontext)
+        {
+            _dbcontext = dbcontext;
+        }
 
         [HttpGet("{forecastId:long}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.WeatherForecastModel))]
@@ -18,13 +24,13 @@ namespace ITPlanet.Controllers
         {
             if (forecastId == null)
                 return BadRequest();
-            var forecast = Forecasts.FirstOrDefault(x => x.Id == forecastId);
+            var forecast = _dbcontext.WeatherForecasts.FirstOrDefault(x => x.Id == forecastId);
             if (forecast == null)
                 return NotFound();
             return Ok(forecast);
         }
 
-        [HttpPost("{forecastId:long}")]
+        [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.WeatherForecastModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -36,6 +42,13 @@ namespace ITPlanet.Controllers
             var region = RegionController.Regions.FirstOrDefault(x => x.Id == forecast.RegionId);
             if (region == null)
                 return NotFound("Регион не найден");
+            ITPlanet.Data.Models.WeatherForecast weatherForecast = new ITPlanet.Data.Models.WeatherForecast()
+            {
+                DateTime = forecast.DateTime,
+                Temperature = forecast.Temperature,
+                WeatherCondition = forecast.WeatherCondition,
+                RegionId = forecast.RegionId
+            };
             return Ok(forecast);
         }
 
@@ -48,12 +61,21 @@ namespace ITPlanet.Controllers
         {
             if (forecastId == null || forecastId <= 0 || string.IsNullOrEmpty(forecast.WeatherCondition))
                 return BadRequest();
-            var forecastFind = Forecasts.FirstOrDefault(x => x.Id == forecastId);
+            var forecastFind = _dbcontext.WeatherForecasts.FirstOrDefault(x => x.Id == forecastId);
             if (forecastFind == null)
                 return NotFound();
             forecastFind.Temperature = forecast.Temperature;
             forecastFind.WeatherCondition = forecast.WeatherCondition;
             forecastFind.DateTime = forecast.DateTime;
+            forecastFind.RegionId = forecast.RegionId;
+            try
+            {
+                _dbcontext.SaveChanges();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
             return Ok();
         }
 
@@ -65,9 +87,18 @@ namespace ITPlanet.Controllers
         public ActionResult Delete(long forecastId) {
             if (forecastId == null || forecastId <= 0)
                 return BadRequest();
-            var forecast = Forecasts.FirstOrDefault(x => x.Id == forecastId);
+            var forecast = _dbcontext.WeatherForecasts.FirstOrDefault(x => x.Id == forecastId);
             if (forecast == null)
                 return NotFound();
+            _dbcontext.WeatherForecasts.Remove(forecast);
+            try
+            {
+                _dbcontext.SaveChanges();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
             return Ok();
         }
     }

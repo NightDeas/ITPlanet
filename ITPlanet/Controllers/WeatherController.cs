@@ -11,33 +11,11 @@ namespace ITPlanet.Controllers
     public class WeatherController : ControllerBase
     {
 
-        public static List<Models.WeatherModel> WeatherModels { get; set; } = new();
+        private readonly ITPlanet.Data.Data.ApplicationDbContext _dbcontext;
 
-        public WeatherController()
+        public WeatherController(ITPlanet.Data.Data.ApplicationDbContext context)
         {
-            //WeatherModels ??= Enumerable.Range(1, 10)
-            //    .Select(index => new WeatherModel()
-            //    {
-            //        Id = index,
-            //        Humidity = Random.Shared.NextSingle(),
-            //        Temperature = Random.Shared.NextSingle(),
-            //        RegionId = Random.Shared.Next(0, 10),
-            //        MeasurementDateTime = new DateTime(12, month: 12, day: 12, hour: 12, 12, 12),
-            //        PrecipitationAmount = Random.Shared.NextSingle(),
-            //        RegionName = "string",
-            //        WindSpeed = Random.Shared.NextSingle(),
-            //        WeatherCondition = "f",
-            //        WeatherForecast = Enumerable.Range(1,3)
-            //        .Select (index => new WeatherForecastModel()
-            //        {
-            //            Id = index,
-            //            DateTime = new DateTime(12,12,12,12,12,12),
-            //            RegionId = Random.Shared.Next(0,10),
-            //            Temperature = Random.Shared.NextSingle(),
-            //            WeatherCondition = "RAIN"
-            //        }).ToList()
-
-            //    }).ToList();
+            _dbcontext = context;
         }
 
         [HttpGet("{regionId:long}")]
@@ -49,7 +27,7 @@ namespace ITPlanet.Controllers
         {
             if (regionId == null || regionId <= 0)
                 BadRequest();
-            var weather = Controllers.WeatherController.WeatherModels.FirstOrDefault(x => x.RegionId == regionId);
+            var weather = _dbcontext.Weathers.FirstOrDefault(x => x.RegionId == regionId);
             if (weather == null)
                 return NotFound();
             return Ok(weather);
@@ -61,10 +39,12 @@ namespace ITPlanet.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
 
-        public ActionResult Search(SearchRequestModel model) // TODO: не доделано
+        public ActionResult Search(SearchRequestModel model)
         {
-            if (model.RegionId == null)
-                return BadRequest();
+            var response = _dbcontext.Weathers.Where(x => model.StartDateTime >= x.MeasurementDateTime && x.MeasurementDateTime <= model.EndDateTime &&
+            x.RegionId == model.RegionId)
+                .ToList();
+            response.Skip(model.From);
             if (model.WeatherCondition == null)
                 return BadRequest();
             return Ok();
@@ -79,10 +59,29 @@ namespace ITPlanet.Controllers
         {
             if (regionId == null || model.Temperature < 0 || model.WindSpeed < 0 || string.IsNullOrEmpty(model.WeatherCondition) || model.PrecipitationAmount < 0 || regionId <= 0)
                 return BadRequest();
-            var region = Controllers.RegionController.Regions.FirstOrDefault(x => x.Id == regionId);
+            var region = _dbcontext.Regions.FirstOrDefault(x => x.Id == regionId);
             if (region == null)
                 return NotFound();
-            WeatherModels.Add(model);
+            ITPlanet.Data.Models.Weather response = new Data.Models.Weather()
+            {
+                MeasurementDateTime = model.MeasurementDateTime,
+                Humidity = model.Humidity,
+                PrecipitationAmount = model.PrecipitationAmount,
+                RegionId = model.RegionId,
+                RegionName = model.RegionName,
+                Temperature = model.Temperature,
+                WindSpeed = model.WindSpeed,
+                WeatherCondition = model.WeatherCondition
+            };
+            _dbcontext.Weathers.Add(response);
+            try
+            {
+                _dbcontext.SaveChanges();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
             return Ok(model);
         }
 
@@ -91,11 +90,11 @@ namespace ITPlanet.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult Put(long? regionId, Models.WeatherModel model) // TODO: не понимаю, откуда берется forecastId в задании(код 404)
+        public ActionResult Put(long? regionId, Models.WeatherModel model)
         {
             if (regionId == null || string.IsNullOrEmpty(model.RegionName) || string.IsNullOrEmpty(model.WeatherCondition) || model.PrecipitationAmount < 0 || regionId <= 0)
                 return BadRequest();
-            var weather = WeatherModels.FirstOrDefault(x => x.RegionId == regionId);
+            var weather = _dbcontext.Weathers.FirstOrDefault(x => x.RegionId == regionId);
             if (weather == null)
                 return NotFound();
             weather.RegionId = model.RegionId;
@@ -106,8 +105,15 @@ namespace ITPlanet.Controllers
             weather.WindSpeed = model.WindSpeed;
             weather.PrecipitationAmount = model.PrecipitationAmount;
             weather.MeasurementDateTime = model.MeasurementDateTime;
-            weather.WeatherForecast = model.WeatherForecast;
-            return Ok(weather);
+            try
+            {
+                _dbcontext.SaveChanges();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+            return Ok(model);
         }
 
         [HttpDelete("{regionId:long}")]
@@ -119,8 +125,8 @@ namespace ITPlanet.Controllers
         {
             if (regionId == null || regionId <= 0)
                 return BadRequest();
-            var weather = WeatherModels.FirstOrDefault(x => x.RegionId == regionId);
-            WeatherModels.Remove(weather);
+            var weather = _dbcontext.Weathers.FirstOrDefault(x => x.RegionId == regionId);
+            _dbcontext.Weathers.Remove(weather);
             return Ok(weather);
         }
 

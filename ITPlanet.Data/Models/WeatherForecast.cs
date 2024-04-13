@@ -21,7 +21,7 @@
             }
         }
 
-        public long WeatherId { get; set; }
+        public long RegionId { get; set; }
 
         public virtual Weather Weather { get; set; }
     }
