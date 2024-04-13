@@ -13,7 +13,7 @@ namespace ITPlanet.Data.Data
         public virtual DbSet<Models.WeatherForecast> WeatherForecasts { get; set; }
 
         /// <inheritdoc />
-        public ApplicationDbContext(DbContextOptions options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }

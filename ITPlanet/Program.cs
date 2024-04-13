@@ -28,6 +28,7 @@ public class Program
                 optionsBuilder.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
             });
         }, ServiceLifetime.Singleton, ServiceLifetime.Singleton).AddDatabaseDeveloperPageExceptionFilter();
+        #region JwtComment
 
         //builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         //    .AddJwtBearer(config =>
@@ -46,6 +47,7 @@ public class Program
         //                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         //        };
         //    });
+        #endregion
 
         builder.Services.AddAuthorization(options =>
         {

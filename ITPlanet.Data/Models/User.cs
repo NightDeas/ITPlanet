@@ -12,5 +12,7 @@ namespace ITPlanet.Data.Models
         public override int Id { get; set; }
         public string LastName { get; set; }
         public string FirstName { get; set; }
+
+        public virtual ICollection<Region> Regions { get; set; }
     }
 }
