@@ -30,9 +30,6 @@ namespace ITPlanet.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long?>("Id"));
 
-                    b.Property<int>("AccountId")
-                        .HasColumnType("integer");
-
                     b.Property<double?>("Latitude")
                         .HasColumnType("double precision");
 
@@ -50,11 +47,68 @@ namespace ITPlanet.Data.Migrations
                     b.Property<long>("RegionTypeId")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("RegionTypeId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Regions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Latitude = 22.219999999999999,
+                            Longitude = 22.219999999999999,
+                            Name = "Name1",
+                            ParentRegion = "Name1",
+                            RegionTypeId = 1L,
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Latitude = 33.329999999999998,
+                            Longitude = 33.329999999999998,
+                            Name = "Name2",
+                            ParentRegion = "Name1",
+                            RegionTypeId = 1L,
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Latitude = 44.439999999999998,
+                            Longitude = 44.439999999999998,
+                            Name = "Name3",
+                            ParentRegion = "Name2",
+                            RegionTypeId = 2L,
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Latitude = 55.549999999999997,
+                            Longitude = 55.549999999999997,
+                            Name = "Name4",
+                            ParentRegion = "Name3",
+                            RegionTypeId = 3L,
+                            UserId = 1
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            Latitude = 66.659999999999997,
+                            Longitude = 66.659999999999997,
+                            Name = "Name5",
+                            ParentRegion = "Name4",
+                            RegionTypeId = 3L,
+                            UserId = 1
+                        });
                 });
 
             modelBuilder.Entity("ITPlanet.Data.Models.RegionType", b =>
@@ -72,6 +126,33 @@ namespace ITPlanet.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RegionTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Type = "string1"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Type = "string2"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Type = "string3"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Type = "string4"
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            Type = "string5"
+                        });
                 });
 
             modelBuilder.Entity("ITPlanet.Data.Models.Role", b =>
@@ -101,6 +182,14 @@ namespace ITPlanet.Data.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "admin",
+                            NormalizedName = "ADMIN"
+                        });
                 });
 
             modelBuilder.Entity("ITPlanet.Data.Models.User", b =>
@@ -176,6 +265,26 @@ namespace ITPlanet.Data.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "60d19c36-d149-484d-89ae-66b5a993e7d7",
+                            Email = "admin@example.com",
+                            EmailConfirmed = true,
+                            FirstName = "Admin",
+                            LastName = "Admin",
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                            NormalizedUserName = "ADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP/rkAw8sXmOEq61vmIRrml6kwl7FxKq/oP0t7BwbNuo24m2q/faHAsY/6DqsO5u5g==",
+                            PhoneNumberConfirmed = true,
+                            SecurityStamp = "",
+                            TwoFactorEnabled = false,
+                            UserName = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("ITPlanet.Data.Models.Weather", b =>
@@ -217,6 +326,68 @@ namespace ITPlanet.Data.Migrations
                     b.HasIndex("RegionId");
 
                     b.ToTable("Weathers");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            Humidity = 11.11f,
+                            MeasurementDateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7297),
+                            PrecipitationAmount = 12f,
+                            RegionId = 1L,
+                            RegionName = "Name1",
+                            Temperature = 12.1f,
+                            WeatherCondition = "RAIN",
+                            WindSpeed = 15.2f
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            Humidity = 22.22f,
+                            MeasurementDateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7305),
+                            PrecipitationAmount = 13f,
+                            RegionId = 2L,
+                            RegionName = "Name2",
+                            Temperature = 12.1f,
+                            WeatherCondition = "RAIN",
+                            WindSpeed = 15.2f
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            Humidity = 17.11f,
+                            MeasurementDateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7307),
+                            PrecipitationAmount = 13f,
+                            RegionId = 3L,
+                            RegionName = "Name3",
+                            Temperature = 14.1f,
+                            WeatherCondition = "RAIN",
+                            WindSpeed = 15.2f
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            Humidity = 17.11f,
+                            MeasurementDateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7308),
+                            PrecipitationAmount = 12f,
+                            RegionId = 4L,
+                            RegionName = "Name4",
+                            Temperature = 72.1f,
+                            WeatherCondition = "RAIN",
+                            WindSpeed = 15.2f
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            Humidity = 19.11f,
+                            MeasurementDateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7309),
+                            PrecipitationAmount = 12f,
+                            RegionId = 5L,
+                            RegionName = "Name5",
+                            Temperature = 12.1f,
+                            WeatherCondition = "RAIN",
+                            WindSpeed = 15.2f
+                        });
                 });
 
             modelBuilder.Entity("ITPlanet.Data.Models.WeatherForecast", b =>
@@ -230,6 +401,9 @@ namespace ITPlanet.Data.Migrations
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<long>("RegionId")
+                        .HasColumnType("bigint");
+
                     b.Property<float>("Temperature")
                         .HasColumnType("real");
 
@@ -237,14 +411,53 @@ namespace ITPlanet.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<long>("WeatherId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("WeatherId");
+                    b.HasIndex("RegionId");
 
                     b.ToTable("WeatherForecasts");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            DateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7332),
+                            RegionId = 1L,
+                            Temperature = 12.2f,
+                            WeatherCondition = "RAIN"
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            DateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7337),
+                            RegionId = 2L,
+                            Temperature = 17.2f,
+                            WeatherCondition = "RAIN"
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            DateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7338),
+                            RegionId = 3L,
+                            Temperature = 13.2f,
+                            WeatherCondition = "RAIN"
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            DateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7340),
+                            RegionId = 4L,
+                            Temperature = 12.2f,
+                            WeatherCondition = "RAIN"
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            DateTime = new DateTime(2024, 4, 13, 7, 19, 20, 361, DateTimeKind.Utc).AddTicks(7341),
+                            RegionId = 5L,
+                            Temperature = 12.2f,
+                            WeatherCondition = "RAIN"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -329,6 +542,13 @@ namespace ITPlanet.Data.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            RoleId = 1
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
@@ -358,7 +578,15 @@ namespace ITPlanet.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ITPlanet.Data.Models.User", "User")
+                        .WithMany("Regions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("RegionType");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ITPlanet.Data.Models.Weather", b =>
@@ -374,13 +602,13 @@ namespace ITPlanet.Data.Migrations
 
             modelBuilder.Entity("ITPlanet.Data.Models.WeatherForecast", b =>
                 {
-                    b.HasOne("ITPlanet.Data.Models.Weather", "Weather")
-                        .WithMany("WeatherForecast")
-                        .HasForeignKey("WeatherId")
+                    b.HasOne("ITPlanet.Data.Models.Region", "Region")
+                        .WithMany()
+                        .HasForeignKey("RegionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Weather");
+                    b.Navigation("Region");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -433,16 +661,15 @@ namespace ITPlanet.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
-                
 
             modelBuilder.Entity("ITPlanet.Data.Models.RegionType", b =>
                 {
                     b.Navigation("Regions");
                 });
 
-            modelBuilder.Entity("ITPlanet.Data.Models.Weather", b =>
+            modelBuilder.Entity("ITPlanet.Data.Models.User", b =>
                 {
-                    b.Navigation("WeatherForecast");
+                    b.Navigation("Regions");
                 });
 #pragma warning restore 612, 618
         }

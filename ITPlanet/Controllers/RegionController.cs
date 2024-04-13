@@ -3,6 +3,7 @@ using ITPlanet.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using System.Security.AccessControl;
 
 namespace ITPlanet.Controllers
@@ -207,7 +208,11 @@ namespace ITPlanet.Controllers
             {
                 return NotFound();
             }
-            return Ok(region);
+            return Ok(new RegionTypeResponse()
+            {
+                RegionId = region.Id,
+                type = region.Type
+            });
         }
 
         [HttpPost("types")]
@@ -222,10 +227,12 @@ namespace ITPlanet.Controllers
             var regionType = _dbcontext.RegionTypes.FirstOrDefault(x => x.Type == type);
             if (regionType is not null)
                 return Conflict();
-            _dbcontext.RegionTypes.Add(new RegionType()
+            regionType = new RegionType()
             {
                 Type = type
-            });
+            };
+         
+            _dbcontext.RegionTypes.Add(regionType);
             try
             {
                 _dbcontext.SaveChanges();
@@ -235,7 +242,12 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest();
             }
-            return Ok(regionType);
+            
+            return Ok(new RegionTypeResponse()
+            {
+                RegionId = regionType.Id,
+                type = type
+            });
         }
 
         [HttpPut("types/{typeId:long}")]
@@ -290,5 +302,12 @@ namespace ITPlanet.Controllers
             }
             return Ok();
         }
+
+    }
+
+    public class RegionTypeResponse()
+    {
+        public long RegionId { get; set; }
+        public string type { get; set; }
     }
 }

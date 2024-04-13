@@ -2,7 +2,6 @@
 {
     public class Weather
     {
-        private string _weatherCondition { get; set; }
         public long Id { get; set; }
 
         public long RegionId { get; set; }
@@ -15,6 +14,7 @@
 
         public float WindSpeed { get; set; }
 
+        private string _weatherCondition { get; set; }
         public string WeatherCondition
         {
             get => _weatherCondition;
@@ -33,6 +33,6 @@
 
         public virtual Region Region { get; set; }
 
-        public virtual ICollection<Models.WeatherForecast> WeatherForecast { get; set; }
+        //public virtual ICollection<Models.WeatherForecast> WeatherForecast { get; set; }
     }
 }
