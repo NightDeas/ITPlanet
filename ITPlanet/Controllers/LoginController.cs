@@ -37,19 +37,19 @@ namespace ITPlanet.Controllers
         public async Task<ActionResult<AccountModel>> Post(LoginRequest model)
         {
             if (User.Identity?.IsAuthenticated == true)
-                return Ok();
+                return Ok("Запрос от авторизованного аккаунта");
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user is null)
-                return Unauthorized();
+                return Unauthorized("Email или пароль не верны");
 
             var canSignIn = await _signInManager.CanSignInAsync(user);
             if (!canSignIn)
-                return Unauthorized();
+                return Unauthorized("Email или пароль не верны");
 
             var result = await _signInManager.PasswordSignInAsync(user, model.Password, true, false);
             if (!result.Succeeded)
-                return Unauthorized();
+                return Unauthorized("Email или пароль не верны");
 
             await _signInManager.SignInAsync(user, true);
 

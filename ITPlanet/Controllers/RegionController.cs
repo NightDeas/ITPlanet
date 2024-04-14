@@ -28,12 +28,12 @@ namespace ITPlanet.Controllers
         {
             if (regionId <= 0 || regionId == null)
             {
-                return BadRequest();
+                return BadRequest(@"regionld = null, regionld <= 0");
             }
             var region = _dbcontext.Regions.FirstOrDefault(x => x.Id == regionId);
             if (region == null)
             {
-                return NotFound();
+                return NotFound(@"Регион с таким regionld не найдена");
             }
             return Ok(region);
         }
@@ -45,13 +45,11 @@ namespace ITPlanet.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult<RegionModel> Post([FromBody] RegionModel model)
         {
-            if (model.Latitude == null || model.Longitude == null)
-                return BadRequest();
-            if (string.IsNullOrEmpty(model.Name))
-                return BadRequest();
+            if (model.Latitude == null || model.Longitude == null || string.IsNullOrEmpty(model.Name))
+                return BadRequest(@"latitude = null, name = null, longitude = null");
             var region = _dbcontext.Regions.FirstOrDefault(x => x.Latitude == model.Latitude || x.Longitude == model.Longitude);
             if (region is not null)
-                return Conflict();
+                return Conflict(@"Регион с такими latitude и longitude уже существует");
             ITPlanet.Data.Models.Region regionModel = new Data.Models.Region()
             {
                 Name = model.Name,
@@ -74,16 +72,14 @@ namespace ITPlanet.Controllers
 
         public ActionResult<RegionModel> Put(long regionId, [FromBody] RegionModel model)
         {
-            if (regionId == null || model.Latitude == null || model.Longitude == null)
-                return BadRequest();
-            if (string.IsNullOrEmpty(model.Name))
-                return BadRequest();
+            if (regionId == null || model.Latitude == null || model.Longitude == null || string.IsNullOrEmpty(model.Name))
+                return BadRequest(@"regionld = null, name = null, latitude = null, longitude = null");
             var region = _dbcontext.Regions.FirstOrDefault(x => x.Id == regionId);
             if (region == null)
-                return NotFound();
+                return NotFound(@"Регион с таким regionld не найден");
             region = _dbcontext.Regions.FirstOrDefault(x => x.Latitude == model.Latitude || x.Longitude == model.Longitude);
             if (region is not null)
-                return Conflict();
+                return Conflict(@"Регион с такими latitude и longitude уже существует");
 
 
             Region response = new Region()
@@ -97,7 +93,6 @@ namespace ITPlanet.Controllers
             try
             {
                 _dbcontext.SaveChanges();
-
             }
             catch (Exception e)
             {
@@ -115,12 +110,12 @@ namespace ITPlanet.Controllers
         public ActionResult<RegionModel> Delete(long regionId)
         {
             if (regionId == null || regionId < 0)
-                return BadRequest();
+                return BadRequest(@"regionld = null, regionld <= 0,");
             var deleteRegion = _dbcontext.Regions.FirstOrDefault(x => x.Id == regionId);
             if (deleteRegion == null)
-                return NotFound();
+                return NotFound(@"Регион с таким regionld не найдена");
             if ((bool)_dbcontext.Regions.Any(x => x.ParentRegion == deleteRegion.Name))
-                return Conflict();
+                return BadRequest(@"Регион является родительским для другого регион");
 
             _dbcontext.Regions.Remove(deleteRegion);
             try
@@ -201,12 +196,12 @@ namespace ITPlanet.Controllers
         {
             if (typeId <= 0 || typeId == null)
             {
-                return BadRequest();
+                return BadRequest(@"typeId = null, typeId <= 0");
             }
             var region = _dbcontext.RegionTypes.FirstOrDefault(x => x.Id == typeId);
             if (region == null)
             {
-                return NotFound();
+                return NotFound(@"Тип региона с таким typeId не найден");
             }
             return Ok(new RegionTypeResponse()
             {
@@ -223,15 +218,15 @@ namespace ITPlanet.Controllers
         public ActionResult<RegionModel> PostType(string type)
         {
             if (string.IsNullOrEmpty(type))
-                return BadRequest();
+                return BadRequest(@"type = null, type = "" или состоит из пробелов");
             var regionType = _dbcontext.RegionTypes.FirstOrDefault(x => x.Type == type);
             if (regionType is not null)
-                return Conflict();
+                return Conflict(@"Тип региона с таким type уже существует");
             regionType = new RegionType()
             {
                 Type = type
             };
-         
+
             _dbcontext.RegionTypes.Add(regionType);
             try
             {
@@ -242,7 +237,7 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest();
             }
-            
+
             return Ok(new RegionTypeResponse()
             {
                 RegionId = regionType.Id,
@@ -258,13 +253,13 @@ namespace ITPlanet.Controllers
         public ActionResult<RegionModel> PutType(long typeId, [FromBody] Models.RegionTypeModel model)
         {
             if (string.IsNullOrEmpty(model.Type))
-                return BadRequest();
+                return BadRequest(@"typeId <= 0, typeId = null, type = null, type = "" или состоит из пробелов");
             var typeRegion = _dbcontext.RegionTypes.FirstOrDefault(x => x.Id == typeId);
             if (typeRegion == null)
-                return NotFound();
+                return NotFound(@"Тип региона с таким typeId не найден");
             typeRegion = _dbcontext.RegionTypes.FirstOrDefault(x => x.Type == model.Type);
             if (typeRegion is not null)
-                return Conflict();
+                return Conflict(@"Тип региона с таким type уже существует");
 
             typeRegion.Type = model.Type;
             try
@@ -287,10 +282,10 @@ namespace ITPlanet.Controllers
         public ActionResult DeleteType(long typeId)
         {
             if (typeId <= 0 || typeId == null)
-                return BadRequest();
+                return BadRequest(@"typeId = null, typeId <= 0");
             var type = _dbcontext.RegionTypes.FirstOrDefault(x => x.Id == typeId);
             if (type == null)
-                return NotFound();
+                return NotFound(@"Есть регионы с типом с typeId");
             _dbcontext.RegionTypes.Remove(type);
             try
             {

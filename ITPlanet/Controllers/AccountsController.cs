@@ -30,11 +30,11 @@ namespace ITPlanet.Controllers
         public async Task<ActionResult<AccountResponse>> Get(int accountId)
         {
             if (accountId == null || accountId <= 0)
-                return BadRequest();
+                return BadRequest(@"accountId = null, accountId <= 0");
 
             var user = await _userManager.FindByIdAsync(accountId.ToString());
             if (user is null)
-                return NotFound();
+                return NotFound(@"Аккаунт с таким accountId не найден");
 
             var response = new AccountResponse()
             {
@@ -47,6 +47,25 @@ namespace ITPlanet.Controllers
             return Ok(response);
         }
 
+        [HttpGet("search")]
+        [ProducesResponseType(200, Type = typeof(AccountResponse))]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(401)]
+        public async Task<ActionResult<List<AccountResponse>>> Search(string? firstName, string? lastName, string? email, int form, int size)
+        {
+            if (form < 0 || size < 0)
+                return BadRequest("form < 0, size <= 0");
+            var query = _dbContext.Users.ToList();
+            if (!string.IsNullOrEmpty(firstName))
+                query = query.Where(x => x.FirstName.Contains(firstName, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!string.IsNullOrEmpty(lastName))
+                query = query.Where(x => x.LastName.Contains(lastName, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (!string.IsNullOrEmpty(email))
+                query = query.Where(x => x.Email.Contains(email, StringComparison.OrdinalIgnoreCase)).ToList();
+            var response = query.Skip(form).Take(size);
+            return Ok(response);
+        }
+
         [HttpPut("{accountId:int}")]
         [ProducesResponseType(200, Type = typeof(AccountResponse))]
         [ProducesResponseType(404)]
@@ -54,15 +73,15 @@ namespace ITPlanet.Controllers
         public async Task<ActionResult<AccountResponse>> Put(int accountId, AccountRequest model)
         {
             if (accountId == null || accountId <= 0)
-                return BadRequest();
+                return BadRequest(@"accountId = null, accountId <= 0, firstName = null, firstName = "" или состоит из пробелов, lastName = null, lastName = "" или состоит из пробелов, email = null, email = "" или состоит из пробелов, email аккаунта не валидный, password = null, password = "" или состоит из пробелов");
 
             var user = await _userManager.FindByIdAsync(accountId.ToString());
             if (user is null)
-                return NotFound();
+                return NotFound(@"accountId = null, accountId <= 0, firstName = null, firstName = "" или состоит из пробелов, lastName = null, lastName = "" или состоит из пробелов, email = null, email = "" или состоит из пробелов, email аккаунта не валидный, password = null, password = "" или состоит из пробелов");
 
             var otherUser = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id != user.Id && x.NormalizedEmail == model.Email.ToUpper());
             if (otherUser is not null)
-                return Conflict();
+                return Conflict(@"Аккаунт с таким email уже существует");
 
             user.Email = model.Email;
             user.FirstName = model.FirstName;
@@ -89,11 +108,11 @@ namespace ITPlanet.Controllers
         public async Task<ActionResult> Delete(int accountId)
         {
             if (accountId == null || accountId <= 0)
-                return BadRequest();
+                return BadRequest(@"accountId = null, accountId <= 0");
 
             var user = await _userManager.FindByIdAsync(accountId.ToString());
             if (user is null)
-                return NotFound();
+                return NotFound(@"Аккаунт с таким accountId не найден");
 
             await _userManager.DeleteAsync(user);
 

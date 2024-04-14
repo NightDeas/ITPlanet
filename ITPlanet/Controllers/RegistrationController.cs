@@ -34,7 +34,7 @@ namespace ITPlanet.Controllers
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user is not null)
-                return Conflict();
+                return Conflict(@"Аккаунт с таким email уже существует");
 
             user = new User()
             {
@@ -46,11 +46,7 @@ namespace ITPlanet.Controllers
 
             var result = await _userManager.CreateAsync(user, model.Password);
             if (!result.Succeeded)
-                return BadRequest(result);
-
-            user = await _userManager.FindByEmailAsync(model.Email);
-            if (user is null)
-                return NotFound();
+                return BadRequest(@"firstName = null, firstName = "" или состоит из пробелов, lastName = null, lastName = "" или состоит из пробелов, email = null, email = "" или состоит из пробелов, email аккаунта не валидный, password = null, password = "" или состоит из пробелов");
 
             var response = new RegistrationResponse()
             {

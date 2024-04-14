@@ -10,7 +10,15 @@ namespace ITPlanet.Controllers
     [ApiController]
     public class WeatherController : ControllerBase
     {
-
+        public enum weatherConditionEnum
+        {
+            CLEAR,
+            CLOUDY,
+            RAIN,
+            SNOW,
+            FOG,
+            STORM
+        }
         private readonly ITPlanet.Data.Data.ApplicationDbContext _dbcontext;
 
         public WeatherController(ITPlanet.Data.Data.ApplicationDbContext context)
@@ -20,7 +28,7 @@ namespace ITPlanet.Controllers
 
         [HttpGet("{regionId:long}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.WeatherModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)] 
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public ActionResult Get(long? regionId)
@@ -34,20 +42,24 @@ namespace ITPlanet.Controllers
         }
 
         [HttpGet("search")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.WeatherModel))] // TODO: ???
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.WeatherModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
 
-        public ActionResult Search(SearchRequestModel model)
+        public ActionResult Search(string? StartDatetimeString, string? EndDatetimeString, long? regionId, string? weatherCondition, int form, int size)
         {
-            var response = _dbcontext.Weathers.Where(x => model.StartDateTime >= x.MeasurementDateTime && x.MeasurementDateTime <= model.EndDateTime &&
-            x.RegionId == model.RegionId)
-                .ToList();
-            response.Skip(model.From);
-            if (model.WeatherCondition == null)
-                return BadRequest();
-            return Ok();
+            var query = _dbcontext.Weathers.ToList();
+            if (StartDatetimeString != null && DateTime.TryParse(StartDatetimeString, out DateTime dateStart))
+                query = query.Where(x => x.MeasurementDateTime >= dateStart).ToList();
+            if (EndDatetimeString != null && DateTime.TryParse(EndDatetimeString, out DateTime dateEnd))
+                query = query.Where(x => x.MeasurementDateTime <= dateEnd).ToList();
+            if (regionId != null)
+                query = query.Where(x => x.RegionId == regionId).ToList();
+            if (weatherCondition!= null)
+                query = query.Where(x => x.WeatherCondition == weatherCondition.ToString()).ToList();
+            var response = query.Skip(form).Take(size);
+            return Ok(response);
         }
 
         [HttpPost]
@@ -129,9 +141,5 @@ namespace ITPlanet.Controllers
             _dbcontext.Weathers.Remove(weather);
             return Ok(weather);
         }
-
-       
-       
-
     }
 }
