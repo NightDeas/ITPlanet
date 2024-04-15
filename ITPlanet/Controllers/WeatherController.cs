@@ -13,15 +13,7 @@ namespace ITPlanet.Controllers
     [ApiController]
     public class WeatherController : ControllerBase
     {
-        public enum weatherConditionEnum
-        {
-            CLEAR,
-            CLOUDY,
-            RAIN,
-            SNOW,
-            FOG,
-            STORM
-        }
+      
         private readonly ITPlanet.Data.Data.ApplicationDbContext _dbcontext;
 
         public WeatherController(ITPlanet.Data.Data.ApplicationDbContext context)
@@ -150,6 +142,8 @@ namespace ITPlanet.Controllers
             if (regionId == null || regionId <= 0)
                 return BadRequest();
             var weather = _dbcontext.Weathers.FirstOrDefault(x => x.RegionId == regionId);
+            if (weather == null)
+                return NotFound();
             _dbcontext.Weathers.Remove(weather);
             try
             {
@@ -187,10 +181,10 @@ namespace ITPlanet.Controllers
         }
         public float PrecipitationAmount { get; set; }
         public DateTime MeasurementDateTime { get; set; }
-        public List<WeatherForecastRequest> WeatherForecast { get; set; }
+        public List<WeatherForecastRequestOnlyId> WeatherForecast { get; set; }
     }
 
-    public class WeatherForecastRequest
+    public class WeatherForecastRequestOnlyId
     {
         public long Id { get; set; }
     }

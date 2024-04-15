@@ -5,15 +5,16 @@
         public int Id { get; set; }
         public DateTime DateTime { get; set; }
         public float Temperature { get; set; }
+        public string _weatherCondition;
         public string WeatherCondition
         {
-            get => WeatherCondition;
+            get => _weatherCondition;
             set
             {
                 if (value == "CLEAR" || value == "CLOUDY" || value == "RAIN" || value == "SNOW" || value == "FOG" || value == "STORM")
-                    WeatherCondition = value;
+                    _weatherCondition = value;
                 else
-                    WeatherCondition = "";
+                    _weatherCondition = "";
             }
         }
         public long RegionId;

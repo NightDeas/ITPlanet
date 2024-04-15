@@ -47,7 +47,7 @@ namespace ITPlanet.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult<RegionModel> Post([FromBody] RegionModel model)
+        public ActionResult<RegionModel> Post([FromBody] RegionRequest model)
         {
             if (model.Latitude == null || model.Longitude == null || string.IsNullOrEmpty(model.Name))
                 return BadRequest(@"latitude = null, name = null, longitude = null");
@@ -155,10 +155,19 @@ namespace ITPlanet.Controllers
             if (region == null)
                 return NotFound();
 
-
-            weather.RegionId = region.Id;
-            weather.RegionName = region.Name;
-            _dbcontext.Weathers.Update(weather);
+            Weather newWeather = new Weather()
+            {
+                MeasurementDateTime = weather.MeasurementDateTime,
+                Humidity = weather.Humidity,
+                PrecipitationAmount = weather.PrecipitationAmount,
+                WeatherForecast = weather.WeatherForecast,
+                RegionId = region.Id,
+                RegionName = region.Name,
+                Temperature = weather.Temperature,
+                WindSpeed = weather.WindSpeed,
+                WeatherCondition = weather.WeatherCondition
+            };
+            _dbcontext.Weathers.Add(newWeather);
             try
             {
                 _dbcontext.SaveChanges();
@@ -168,13 +177,13 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest();
             }
-            var response = new WeatherResponse(weather);
+            var response = new WeatherResponse(newWeather);
             return Ok(response);
         }
 
         [HttpDelete]
         [Route("{regionId:long}/weather/{weatherId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.RegionModel))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -219,7 +228,7 @@ namespace ITPlanet.Controllers
         }
 
         [HttpPost("types")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.RegionTypeModel))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionTypeResponse))]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -280,7 +289,7 @@ namespace ITPlanet.Controllers
         }
 
         [HttpDelete("types/{typeId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.RegionTypeModel))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

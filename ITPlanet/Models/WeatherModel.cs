@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.Contracts;
 using System.Net;
 
 namespace ITPlanet.Models
@@ -12,24 +13,23 @@ namespace ITPlanet.Models
         public float Temperature { get; set; }
         public float Humidity { get; set; }
         public float WindSpeed { get; set; }
+        public string _weatherCondition;
         public string WeatherCondition
         {
-            get => WeatherCondition;
+            get => _weatherCondition;
             set
             {
                 if (value == "CLEAR" || value == "CLOUDY" || value == "RAIN" || value == "SNOW" || value == "FOG" || value == "STORM")
-                    WeatherCondition = value;
+                    _weatherCondition = value;
                 else
-                    WeatherCondition = "CLEAR";
+                    _weatherCondition = "CLEAR";
             }
         }
         public float PrecipitationAmount { get; set; }
         public DateTime MeasurementDateTime { get;set; }
         public List<Models.WeatherForecastModel> WeatherForecast = new List<Models.WeatherForecastModel>();
 
-        public WeatherModel()
-        {
-        }
+       
 
     }
 }
