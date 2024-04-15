@@ -31,6 +31,8 @@
 
         public DateTime MeasurementDateTime { get; set; }
 
+        public List<Models.WeatherForecast> WeatherForecast { get; set; }
+
         public virtual Region Region { get; set; }
 
         //public virtual ICollection<Models.WeatherForecast> WeatherForecast { get; set; }

@@ -1,4 +1,5 @@
 ﻿using ITPlanet.Data.Data;
+using ITPlanet.Data.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +17,7 @@ namespace ITPlanet.Controllers
         }
 
         [HttpGet("{forecastId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.WeatherForecastModel))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WeatherForecastResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -27,7 +28,8 @@ namespace ITPlanet.Controllers
             var forecast = _dbcontext.WeatherForecasts.FirstOrDefault(x => x.Id == forecastId);
             if (forecast == null)
                 return NotFound();
-            return Ok(forecast);
+            var response = new WeatherForecastResponse(forecast);
+            return Ok(response);
         }
 
         [HttpPost]
@@ -35,25 +37,26 @@ namespace ITPlanet.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult Post(Models.WeatherForecastModel forecast)
+        public ActionResult Post(WeatherForecast forecast)
         {
             if (forecast.RegionId == null || string.IsNullOrEmpty(forecast.WeatherCondition))
                 return BadRequest();
             var region = RegionController.Regions.FirstOrDefault(x => x.Id == forecast.RegionId);
             if (region == null)
                 return NotFound("Регион не найден");
-            ITPlanet.Data.Models.WeatherForecast weatherForecast = new ITPlanet.Data.Models.WeatherForecast()
+            WeatherForecast weatherForecast = new WeatherForecast()
             {
                 DateTime = forecast.DateTime,
                 Temperature = forecast.Temperature,
                 WeatherCondition = forecast.WeatherCondition,
                 RegionId = forecast.RegionId
             };
-            return Ok(forecast);
+            var response = new WeatherForecastResponse(forecast);
+            return Ok(response);
         }
 
         [HttpPut("{forecastId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.WeatherForecastModel))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WeatherForecastResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -76,11 +79,12 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest();
             }
-            return Ok();
+            var response = new WeatherForecastResponse(forecastFind);
+            return Ok(response);
         }
 
         [HttpDelete("{forecastId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.WeatherForecastModel))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -101,5 +105,40 @@ namespace ITPlanet.Controllers
             }
             return Ok();
         }
+    }
+
+    public class WeatherForecastResponse
+    {
+        
+
+        public long Id { get; set; }
+        public DateTime DateTime { get; set; }
+
+        public float Temperature { get; set; }
+
+        private string _weatherCondition;
+
+        public WeatherForecastResponse(WeatherForecast model)
+        {
+            Id = model.Id;
+            DateTime = model.DateTime;
+            Temperature = model.Temperature;
+            WeatherCondition = model.WeatherCondition;
+            RegionId = model.RegionId;
+        }
+
+        public string WeatherCondition
+        {
+            get => _weatherCondition;
+            set
+            {
+                if (value == "CLEAR" || value == "CLOUDY" || value == "RAIN" || value == "SNOW" || value == "FOG" || value == "STORM")
+                    _weatherCondition = value;
+                else
+                    _weatherCondition = "";
+            }
+        }
+
+        public long RegionId { get; set; }
     }
 }

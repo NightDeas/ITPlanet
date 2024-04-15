@@ -24,10 +24,10 @@ namespace ITPlanet.Controllers
         public static List<Models.RegionModel> Regions { get; set; }
 
         [HttpGet("{regionId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionResponse))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionResponseFull))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult Get(long? regionId)
+        public ActionResult Get(long regionId)
         {
             if (regionId <= 0 || regionId == null)
             {
@@ -38,7 +38,7 @@ namespace ITPlanet.Controllers
             {
                 return NotFound(@"Регион с таким regionld не найдена");
             }
-            RegionResponse response = new RegionResponse(region);
+            RegionResponseFull response = new RegionResponseFull(region);
             return Ok(response);
         }
 
@@ -51,7 +51,7 @@ namespace ITPlanet.Controllers
         {
             if (model.Latitude == null || model.Longitude == null || string.IsNullOrEmpty(model.Name))
                 return BadRequest(@"latitude = null, name = null, longitude = null");
-            var region = _dbcontext.Regions.FirstOrDefault(x => x.Latitude == model.Latitude || x.Longitude == model.Longitude);
+            var region = _dbcontext.Regions.FirstOrDefault(x => x.Latitude == model.Latitude && x.Longitude == model.Longitude);
             if (region is not null)
                 return Conflict(@"Регион с такими latitude и longitude уже существует");
             ITPlanet.Data.Models.Region regionModel = new Data.Models.Region()
@@ -61,7 +61,7 @@ namespace ITPlanet.Controllers
                 Longitude = model.Longitude,
                 ParentRegion = model.ParentRegion,
                 RegionTypeId = model.RegionType,
-                UserId =  
+                UserId = 1
             };
             _dbcontext.Regions.Add(regionModel);
             try
@@ -82,26 +82,24 @@ namespace ITPlanet.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
 
-        public ActionResult<RegionModel> Put(long regionId, [FromBody] RegionModel model)
+        public ActionResult<RegionModel> Put(long regionId, [FromBody] RegionRequest model)
         {
             if (regionId == null || model.Latitude == null || model.Longitude == null || string.IsNullOrEmpty(model.Name))
                 return BadRequest(@"regionld = null, name = null, latitude = null, longitude = null");
-            var region = _dbcontext.Regions.FirstOrDefault(x => x.Id == regionId);
-            if (region == null)
+            var regionPut = _dbcontext.Regions.FirstOrDefault(x => x.Id == regionId);
+            if (regionPut == null)
                 return NotFound(@"Регион с таким regionld не найден");
-            region = _dbcontext.Regions.FirstOrDefault(x => x.Latitude == model.Latitude || x.Longitude == model.Longitude);
+            var region = _dbcontext.Regions.FirstOrDefault(x => x.Latitude == model.Latitude || x.Longitude == model.Longitude);
             if (region is not null)
                 return Conflict(@"Регион с такими latitude и longitude уже существует");
 
+            regionPut.Name = model.Name;
+            regionPut.Latitude = model.Latitude;
+            regionPut.Longitude = model.Longitude;
+            regionPut.ParentRegion = model.ParentRegion;
+            regionPut.RegionTypeId = model.RegionType;
 
-            Region regionNew = new Region()
-            {
-                Name = model.Name,
-                Latitude = model.Latitude,
-                Longitude = model.Longitude,
-                ParentRegion = model.ParentRegion,
-            };
-            _dbcontext.Regions.Update(regionNew);
+            _dbcontext.Regions.Update(regionPut);
             try
             {
                 _dbcontext.SaveChanges();
@@ -110,7 +108,7 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest();
             }
-            return Ok(new RegionResponse(regionNew));
+            return Ok(new RegionResponse(regionPut));
         }
 
         [HttpDelete("{regionId:long}")]
@@ -142,7 +140,7 @@ namespace ITPlanet.Controllers
         }
         [HttpPost]
         [Route("{regionId:long}/weather/{weatherId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.WeatherModel))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WeatherResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -157,9 +155,10 @@ namespace ITPlanet.Controllers
             if (region == null)
                 return NotFound();
 
-            weather.RegionId = (long)region.Id;
+
+            weather.RegionId = region.Id;
             weather.RegionName = region.Name;
-            _dbcontext.Weathers.Add(weather);
+            _dbcontext.Weathers.Update(weather);
             try
             {
                 _dbcontext.SaveChanges();
@@ -169,11 +168,12 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest();
             }
-            return Ok(weather);
+            var response = new WeatherResponse(weather);
+            return Ok(response);
         }
 
         [HttpDelete]
-        [Route("{typeId:long}/weather/{weatherId:long}")]
+        [Route("{regionId:long}/weather/{weatherId:long}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.RegionModel))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -209,16 +209,13 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest(@"typeId = null, typeId <= 0");
             }
-            var region = _dbcontext.RegionTypes.FirstOrDefault(x => x.Id == typeId);
-            if (region == null)
+            var regionType = _dbcontext.RegionTypes.FirstOrDefault(x => x.Id == typeId);
+            if (regionType == null)
             {
                 return NotFound(@"Тип региона с таким typeId не найден");
             }
-            return Ok(new RegionTypeResponse()
-            {
-                RegionId = region.Id,
-                type = region.Type
-            });
+            var response = new RegionTypeResponse(regionType);
+            return Ok(response);
         }
 
         [HttpPost("types")]
@@ -249,30 +246,26 @@ namespace ITPlanet.Controllers
                 return BadRequest();
             }
 
-            return Ok(new RegionTypeResponse()
-            {
-                RegionId = regionType.Id,
-                type = type
-            });
+            return Ok(new RegionTypeResponse(regionType));
         }
 
         [HttpPut("types/{typeId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.RegionTypeModel))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionTypeRequest))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public ActionResult<RegionModel> PutType(long typeId, [FromBody] Models.RegionTypeModel model)
+        public ActionResult<RegionModel> PutType(long typeId, [FromBody] RegionTypeRequest model)
         {
             if (string.IsNullOrEmpty(model.Type))
                 return BadRequest(@"typeId <= 0, typeId = null, type = null, type = "" или состоит из пробелов");
-            var typeRegion = _dbcontext.RegionTypes.FirstOrDefault(x => x.Id == typeId);
-            if (typeRegion == null)
+            var typeRegionPut = _dbcontext.RegionTypes.FirstOrDefault(x => x.Id == typeId);
+            if (typeRegionPut == null)
                 return NotFound(@"Тип региона с таким typeId не найден");
-            typeRegion = _dbcontext.RegionTypes.FirstOrDefault(x => x.Type == model.Type);
+            var typeRegion = _dbcontext.RegionTypes.FirstOrDefault(x => x.Type == model.Type);
             if (typeRegion is not null)
                 return Conflict(@"Тип региона с таким type уже существует");
 
-            typeRegion.Type = model.Type;
+            typeRegionPut.Type = model.Type;
             try
             {
                 _dbcontext.SaveChanges();
@@ -282,7 +275,8 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest();
             }
-            return Ok(typeRegion);
+            var response = new RegionTypeResponse(typeRegionPut);
+            return Ok(response);
         }
 
         [HttpDelete("types/{typeId:long}")]
@@ -306,16 +300,51 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest();
             }
-            return Ok();
+            return Ok(new RegionTypeResponse(type));
         }
 
     }
+
+
+    public class RegionTypeRequest
+    {
+        public string Type { get; set; }
+    }
+    public class RegionTypeResponse
+    {
+        public long Id { get; set; }
+        public string Type { get; set; }
+        public RegionTypeResponse(RegionType RegionTypeModel)
+        {
+            Id = RegionTypeModel.Id;
+            Type = RegionTypeModel.Type;
+        }
+
+    }
+    public class RegionRequest
+    {
+        public long RegionType { get; set; }
+        public string Name { get; set; }
+        public string ParentRegion { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+    }
+    public class RegionResponseFull : RegionResponse
+    {
+        public int AccountId { get; set; }
+
+        public RegionResponseFull(Region region) : base(region)
+        {
+            AccountId = region.UserId;
+        }
+    }
+
+
 
     public class RegionResponse
     {
         public RegionResponse(Region region)
         {
-            AccountId = region.UserId;
             Latitude = region.Latitude;
             Id = region.Id;
             Longitude = region.Longitude;
@@ -326,7 +355,6 @@ namespace ITPlanet.Controllers
 
         public long Id { get; set; }
         public long RegionType { get; set; }
-        public int AccountId { get; set; }
         public string Name { get; set; }
         public string ParentRegion { get; set; }
         public double Latitude { get; set; }
@@ -334,9 +362,5 @@ namespace ITPlanet.Controllers
 
     }
 
-    public class RegionTypeResponse
-    {
-        public long RegionId { get; set; }
-        public string type { get; set; }
-    }
+    
 }

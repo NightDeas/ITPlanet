@@ -12,9 +12,9 @@ namespace ITPlanet
             _userManager = userManager;
         }
 
-        public async Task<int?> GetCurrentUserIdAsync()
-        {
-            _userManager.GetUserId();
-        }
+        //public async Task<int?> GetCurrentUserIdAsync()
+        //{
+        //    _userManager.GetUserId();
+        //}
     }
 }
