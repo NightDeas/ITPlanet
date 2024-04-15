@@ -1,7 +1,6 @@
 ﻿using ITPlanet.Models.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-//using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.ComponentModel.DataAnnotations;
 
 namespace ITPlanet.Controllers
@@ -46,9 +45,10 @@ namespace ITPlanet.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-
         public ActionResult Search(string? StartDatetimeString, string? EndDatetimeString, long? regionId, string? weatherCondition, int form, int size)
         {
+            if (form <= 0 || size <= 0)
+                return BadRequest();
             var query = _dbcontext.Weathers.ToList();
             if (StartDatetimeString != null && DateTime.TryParse(StartDatetimeString, out DateTime dateStart))
                 query = query.Where(x => x.MeasurementDateTime >= dateStart).ToList();
@@ -102,7 +102,7 @@ namespace ITPlanet.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult Put(long? regionId, Models.WeatherModel model)
+        public ActionResult Put(long regionId, Models.WeatherModel model)
         {
             if (regionId == null || string.IsNullOrEmpty(model.RegionName) || string.IsNullOrEmpty(model.WeatherCondition) || model.PrecipitationAmount < 0 || regionId <= 0)
                 return BadRequest();
@@ -139,7 +139,15 @@ namespace ITPlanet.Controllers
                 return BadRequest();
             var weather = _dbcontext.Weathers.FirstOrDefault(x => x.RegionId == regionId);
             _dbcontext.Weathers.Remove(weather);
-            return Ok(weather);
+            try
+            {
+                _dbcontext.SaveChanges();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+            return Ok();
         }
     }
 }

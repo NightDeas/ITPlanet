@@ -2,6 +2,7 @@
 using ITPlanet.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Security.AccessControl;
@@ -13,15 +14,17 @@ namespace ITPlanet.Controllers
     public class RegionController : ControllerBase
     {
         private readonly ITPlanet.Data.Data.ApplicationDbContext _dbcontext;
-        public RegionController(ITPlanet.Data.Data.ApplicationDbContext context)
+        private readonly UserManager<User> _userManager;
+        public RegionController(ITPlanet.Data.Data.ApplicationDbContext context, UserManager<User> userManager)
         {
             _dbcontext = context;
+            _userManager = userManager;
         }
 
         public static List<Models.RegionModel> Regions { get; set; }
 
         [HttpGet("{regionId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionModel))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult Get(long? regionId)
@@ -35,11 +38,12 @@ namespace ITPlanet.Controllers
             {
                 return NotFound(@"Регион с таким regionld не найдена");
             }
-            return Ok(region);
+            RegionResponse response = new RegionResponse(region);
+            return Ok(response);
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionModel))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionResponse))]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -56,15 +60,23 @@ namespace ITPlanet.Controllers
                 Latitude = model.Latitude,
                 Longitude = model.Longitude,
                 ParentRegion = model.ParentRegion,
-                RegionTypeId = model.RegionType
+                RegionTypeId = model.RegionType,
+                UserId =  
             };
             _dbcontext.Regions.Add(regionModel);
-            _dbcontext.SaveChanges();
-            return Ok(region);
+            try
+            {
+                _dbcontext.SaveChanges();
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
+            return Ok(new RegionResponse(regionModel));
         }
 
         [HttpPut("{regionId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionModel))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionResponse))]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -82,14 +94,14 @@ namespace ITPlanet.Controllers
                 return Conflict(@"Регион с такими latitude и longitude уже существует");
 
 
-            Region response = new Region()
+            Region regionNew = new Region()
             {
                 Name = model.Name,
                 Latitude = model.Latitude,
                 Longitude = model.Longitude,
                 ParentRegion = model.ParentRegion,
             };
-            _dbcontext.Regions.Update(response);
+            _dbcontext.Regions.Update(regionNew);
             try
             {
                 _dbcontext.SaveChanges();
@@ -98,11 +110,11 @@ namespace ITPlanet.Controllers
             {
                 return BadRequest();
             }
-            return Ok(model);
+            return Ok(new RegionResponse(regionNew));
         }
 
         [HttpDelete("{regionId:long}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RegionModel))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -121,7 +133,6 @@ namespace ITPlanet.Controllers
             try
             {
                 _dbcontext.SaveChanges();
-
             }
             catch (Exception e)
             {
@@ -300,7 +311,30 @@ namespace ITPlanet.Controllers
 
     }
 
-    public class RegionTypeResponse()
+    public class RegionResponse
+    {
+        public RegionResponse(Region region)
+        {
+            AccountId = region.UserId;
+            Latitude = region.Latitude;
+            Id = region.Id;
+            Longitude = region.Longitude;
+            Name = region.Name;
+            ParentRegion = region.ParentRegion;
+            RegionType = region.RegionTypeId;
+        }
+
+        public long Id { get; set; }
+        public long RegionType { get; set; }
+        public int AccountId { get; set; }
+        public string Name { get; set; }
+        public string ParentRegion { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+
+    }
+
+    public class RegionTypeResponse
     {
         public long RegionId { get; set; }
         public string type { get; set; }
